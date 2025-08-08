@@ -36,3 +36,5 @@ coverage.out
 # Ignore local env files
 .env
 .env.*
+
+.envrc

@@ -1,0 +1,6 @@
+# Exemplo de variáveis de ambiente para uso com direnv
+export OTEL_EXPORTER_OTLP_ENDPOINT=localhost:4318
+export OTEL_SERVICE_NAME=poc-wslogger
+export OTEL_DEPLOY_ENV=dev
+export OTEL_OWNER=thiago
+export LOG_LEVEL=info

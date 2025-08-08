@@ -1,3 +1,4 @@
+
 package main
 
 import (
@@ -22,22 +23,33 @@ import (
 	oteltrace "go.opentelemetry.io/otel/trace"
 )
 
+// getEnv retorna o valor da variável de ambiente ou o valor padrão se não estiver setada
+func getEnv(key, def string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return def
+}
+
 func initTracer(ctx context.Context) (*sdktrace.TracerProvider, error) {
 	// >>> Exporter via OTLP HTTP para o Collector em localhost:4318
+	endpoint := getEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4318")
 	exp, err := otlptracehttp.New(ctx,
-		otlptracehttp.WithEndpoint("localhost:4318"), // sem "http://"
-		otlptracehttp.WithInsecure(),                 // HTTP plain
-		// otlphttp.WithURLPath("/v1/traces"),   // opcional (default já é /v1/traces)
+		otlptracehttp.WithEndpoint(endpoint),
+		otlptracehttp.WithInsecure(),
 	)
 	if err != nil {
 		return nil, err
 	}
 
+	serviceName := getEnv("OTEL_SERVICE_NAME", "poc-wslogger")
+	env := getEnv("OTEL_DEPLOY_ENV", "dev")
+	owner := getEnv("OTEL_OWNER", "thiago")
 	res, err := resource.New(ctx,
 		resource.WithAttributes(
-			semconv.ServiceName("myAppServices"),
-			semconv.DeploymentEnvironment("dev"),
-			attribute.String("owner", "thiago"),
+			semconv.ServiceName(serviceName),
+			semconv.DeploymentEnvironment(env),
+			attribute.String("owner", owner),
 		),
 	)
 	if err != nil {
@@ -71,11 +83,8 @@ func main() {
 	}()
 
 	// ====== Logger ======
-	lg := wslogger.NewLogger(
-	//  wslogger.WithKind(wslogger.Stdout),
-	//      wslogger.WithFormat(wslogger.JSON),
-	//      wslogger.WithAppName("poc-wslogger"),
-	)
+	// Parâmetros opcionais removidos para compatibilidade
+	lg := wslogger.NewLogger()
 
 	tr := otel.Tracer("demo")
 
