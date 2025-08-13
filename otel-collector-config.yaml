@@ -12,7 +12,6 @@ exporters:
     tls:
       insecure: true
   logging:
-    # 'loglevel' é deprecated; use 'verbosity'
     verbosity: normal
 
 processors:

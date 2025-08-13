@@ -5,12 +5,52 @@ services:
     volumes:
       - ./otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
     ports:
-      - "4317:4317"   # OTLP gRPC
-      - "4318:4318"   # OTLP HTTP
+      - "4317:4317"   # OTLP gRPC (se quiser usar gRPC)
+      - "4318:4318"   # OTLP HTTP (recomendado na POC)
       - "13133:13133" # healthcheck
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:13133/healthz"]
+      interval: 5s
+      timeout: 2s
+      retries: 20
+
   jaeger:
     image: jaegertracing/all-in-one:1.57
     environment:
       - COLLECTOR_OTLP_ENABLED=true
     ports:
-      - "16686:16686"
+      - "16686:16686" # Jaeger UI
+
+  loki:
+    image: grafana/loki:2.9.4
+    command: ["-config.file=/etc/loki/config.yaml"]
+    volumes:
+      - ./loki-config.yaml:/etc/loki/config.yaml:ro
+      - loki-data:/loki
+    ports:
+      - "3100:3100"   # Loki API
+
+  promtail:
+    image: grafana/promtail:2.9.4
+    command: ["-config.file=/etc/promtail/config.yaml"]
+    volumes:
+      - ./promtail-config.yaml:/etc/promtail/config.yaml:ro
+      - ./logs:/logs  # <- vamos escrever seu app aqui
+    depends_on:
+      - loki
+
+  grafana:
+    image: grafana/grafana:10.4.5
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_DEFAULT_THEME=light
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    depends_on:
+      - loki
+      - jaeger
+
+volumes:
+  loki-data:

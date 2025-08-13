@@ -38,3 +38,6 @@ coverage.out
 .env.*
 
 .envrc
+
+logs/*.log
+!logs/.gitkeep
