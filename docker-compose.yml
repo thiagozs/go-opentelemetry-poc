@@ -35,7 +35,7 @@ services:
     command: ["-config.file=/etc/promtail/config.yaml"]
     volumes:
       - ./promtail-config.yaml:/etc/promtail/config.yaml:ro
-      - ./logs:/logs  # <- vamos escrever seu app aqui
+      - ./logs:/logs  # <- log do app aqui
     depends_on:
       - loki
 
